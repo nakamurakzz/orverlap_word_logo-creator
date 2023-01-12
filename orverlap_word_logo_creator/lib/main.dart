@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:orverlap_word_logo_creator/pages/home_page.dart';
 
 import 'pages/logo_create_page.dart';
 
@@ -12,11 +13,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const LogoCreatePage(title: 'Orverlap Word'),
+      routes: {
+        '/': (context) => const HomePage(),
+        '/logo': (context) => const LogoCreatePage(),
+      },
+      initialRoute: '/',
     );
   }
 }

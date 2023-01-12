@@ -4,18 +4,22 @@ import 'package:flutter/material.dart';
 import 'package:english_words/english_words.dart';
 import 'dart:math';
 import 'package:intl/intl.dart';
-
 import '../models/Ranking.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-const timeLimit = 60;
+const timeLimit = 30;
 final Random random = Random();
 
 String _getRondomWord() => nouns[random.nextInt(nouns.length)];
 
-class LogoCreatePage extends StatefulWidget {
-  const LogoCreatePage({super.key, required this.title});
+class LogoCreatePageArgs {
+  final String name;
 
-  final String title;
+  LogoCreatePageArgs({required this.name});
+}
+
+class LogoCreatePage extends StatefulWidget {
+  const LogoCreatePage({super.key});
 
   @override
   State<LogoCreatePage> createState() => _LogoCreatePageState();
@@ -119,66 +123,36 @@ class _LogoCreatePageState extends State<LogoCreatePage> {
 
   @override
   Widget build(BuildContext context) {
+    final name = ModalRoute.of(context)!.settings.arguments as String;
+    setState(() => _userName = name);
+
     return MaterialApp(
+        theme: ThemeData(fontFamily: 'NotoSansJP'),
         home: Scaffold(
             appBar: AppBar(
-              title: Text(widget.title),
+              title: const Text('Orverlap Word'),
             ),
-            body: Padding(
+            body: SingleChildScrollView(
+                child: Padding(
               padding: const EdgeInsets.all(30),
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    const Text("1. Input your name.",
-                        style: TextStyle(fontSize: 20)),
-                    const Text(" 2. Click Start button and Game Start.",
-                        style: TextStyle(fontSize: 20)),
-                    const SizedBox(
-                      height: 16,
+                    Text(
+                      'UserName: $_userName',
+                      style: const TextStyle(fontSize: 20),
                     ),
+                    const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          'Your Name:',
-                        ),
-                        const SizedBox(width: 8),
-                        SizedBox(
-                          width: 400,
-                          child: TextField(
-                            // 非活性
-                            enabled: !_isTimerStart,
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                            ),
-                            maxLength: 32,
-                            // text Filed size : width 40
-                            onChanged: (String value) {
-                              setState(() => _userName = value);
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        ElevatedButton(
-                          onPressed: !_isTimerStart ? _start : null,
-                          child: const Text('Start',
-                              style: TextStyle(fontSize: 20)),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 80,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text("timer: ${_timer.toString()}",
+                        Text("Time Limit: ${_timer.toString()}",
                             style: const TextStyle(fontSize: 48)),
                         const SizedBox(
                           width: 48,
                         ),
-                        Text("score: ${_score.toString()}",
+                        Text("Score: ${_score.toString()}",
                             style: const TextStyle(fontSize: 48)),
                         const SizedBox(
                           height: 32,
@@ -187,6 +161,14 @@ class _LogoCreatePageState extends State<LogoCreatePage> {
                     ),
                     const SizedBox(
                       height: 32,
+                    ),
+                    ElevatedButton(
+                      onPressed: !_isTimerStart ? _start : null,
+                      child:
+                          const Text('START', style: TextStyle(fontSize: 40)),
+                    ),
+                    const SizedBox(
+                      height: 64,
                     ),
                     _isTimerStart
                         ? Text(
@@ -198,27 +180,38 @@ class _LogoCreatePageState extends State<LogoCreatePage> {
                             ),
                           )
                         : const Text(
-                            "Word will be displayed here",
+                            "The word will be displayed here",
                             style: TextStyle(color: Colors.grey, fontSize: 50),
                           ),
+                    const SizedBox(
+                      height: 16,
+                    ),
                     // Input Text
-                    TextField(
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        labelText: 'Answer Here',
-                      ),
-                      onChanged: (String value) {
-                        _inpuText(value);
-                      },
-                      controller: _editController,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 400,
+                          child: TextField(
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              labelText: 'Answer',
+                            ),
+                            onChanged: (String value) {
+                              _inpuText(value);
+                            },
+                            controller: _editController,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(
                       height: 16,
                     ),
                     ElevatedButton(
-                      onPressed: _changeAnswerWord,
-                      child: const Text('Change Answer Word',
-                          style: TextStyle(fontSize: 20)),
+                      onPressed: _isTimerStart ? _changeAnswerWord : null,
+                      child: const Text('Pass!(-1)',
+                          style: TextStyle(fontSize: 32)),
                     ),
                     const SizedBox(
                       height: 32,
@@ -232,14 +225,14 @@ class _LogoCreatePageState extends State<LogoCreatePage> {
                               children: [
                                 const SizedBox(width: 16),
                                 ElevatedButton(
-                                  onPressed: _restart,
+                                  onPressed: _isTimerStart ? _restart : null,
                                   child: const Text('Restart',
                                       style: TextStyle(fontSize: 20)),
                                 ),
                                 const SizedBox(width: 16),
                                 ElevatedButton(
-                                  onPressed: _stop,
-                                  child: const Text('Stop',
+                                  onPressed: _isTimerStart ? _stop : null,
+                                  child: const Text('STOP',
                                       style: TextStyle(fontSize: 20)),
                                 ),
                               ],
@@ -249,7 +242,7 @@ class _LogoCreatePageState extends State<LogoCreatePage> {
                   ],
                 ),
               ),
-            )));
+            ))));
   }
 
   Future rankingWindow(BuildContext context, List<Score> ranking) => showDialog(
