@@ -5,9 +5,9 @@ import 'package:english_words/english_words.dart';
 import 'dart:math';
 import 'package:intl/intl.dart';
 import '../models/Ranking.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:dio/dio.dart';
 
-const timeLimit = 30;
+const timeLimit = 10;
 final Random random = Random();
 
 String _getRondomWord() => nouns[random.nextInt(nouns.length)];
@@ -43,7 +43,7 @@ class _LogoCreatePageState extends State<LogoCreatePage> {
     super.initState();
     Timer.periodic(
       const Duration(seconds: 1),
-      (Timer timer) {
+      (Timer timer) async {
         if (_isTimerStart && _timer > 0) {
           _timer--;
           setState(() {});
@@ -51,25 +51,17 @@ class _LogoCreatePageState extends State<LogoCreatePage> {
           if (_timer == 0) {
             setState(() => _isTimerStart = false);
             // HTTP POST
-            // _postRanking();
+            await _postScore();
+
             // HTTP GET
-            // _getRanking();
-            setState(() {
-              _ranking.add(
-                Score(
-                  id: "8",
-                  name: _userName,
-                  score: _score,
-                  playDateTime:
-                      DateFormat('yyyy/MM/dd HH:mm:ss').format(DateTime.now()),
-                ),
-              );
-            });
+            final ranking = await _fetchScore();
+
+            print("ranking: $ranking");
 
             // sort
             // 上位5位まで表示
-            _ranking.sort((a, b) => b.score - a.score);
-            rankingWindow(context, _ranking);
+            ranking.sort((a, b) => b.score - a.score);
+            rankingWindow(context, ranking);
             _resetScore();
             _resetTimer();
           }
@@ -269,4 +261,34 @@ class _LogoCreatePageState extends State<LogoCreatePage> {
           );
         },
       );
+
+  // APIからデータを取得する
+  Future<List<Score>> _fetchScore() async {
+    try {
+      final response =
+          await Dio().get('http://localhost:3000/scores', queryParameters: {
+        "limit": 5,
+      });
+      final scores = response.data as List;
+      return scores.map((score) => Score.fromJson(score)).toList();
+    } catch (e) {
+      print(e);
+      return [];
+    }
+  }
+
+  // POST
+  Future<void> _postScore() async {
+    try {
+      final response = await Dio().post('http://localhost:3000/scores', data: {
+        "name": _userName,
+        "score": _score,
+        "playDateTime": DateTime.now().toIso8601String()
+      });
+      print(response);
+      return;
+    } catch (e) {
+      print(e);
+    }
+  }
 }
